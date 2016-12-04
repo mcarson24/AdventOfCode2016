@@ -1,0 +1,5 @@
+suites:
+  standard_key_pad_suite:
+    namespace: App
+    psr4_prefix: App
+    src_path: app
