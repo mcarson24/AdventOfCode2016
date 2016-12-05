@@ -7,29 +7,26 @@ use App\RoomDecrypter;
 
 $roomCodes = file('roomCodes.txt');
 
-$validRooms = array_map(function($roomCode) {
-	return new RoomCode($roomCode);
-}, $roomCodes);
+$roomCodes = collect($roomCodes);
 
-$validRooms = array_filter($validRooms, function($room) {
+$validRoomNames = $roomCodes->map(function($roomCode) {
+	return new RoomCode($roomCode);
+})->filter(function($room) {
 	return $room->isValid();
 });
 
-$roomNames = array_map(function($room) {
-	return [
-		'name' => (new RoomDecrypter($room->roomName, $room->sectorID))->decode(),
-		'sectorID' => $room->sectorID
-	];
-}, $validRooms);
-
-
-$amount = array_reduce($validRooms, function($carry, $room) {
+$validRoomSectorIDSum = $validRoomNames->reduce(function($carry, $room) {
 	return $carry += $room->sectorID;
 });
 
-var_dump(array_filter($roomNames, function($room) {
-	return strpos($room['name'], 'pole');
-}));
+$northPoleStorageID = $validRoomNames->map(function($room) {
+	return [
+		'roomName' => (new RoomDecrypter($room->roomName, $room->sectorID))->decode(),
+		'sectorID' => $room->sectorID
+	];
+})->filter(function($room) {
+	return strpos($room['roomName'], 'pole');
+})->flatten()->get(1);
 
-echo sprintf("Sector ID sums of valid rooms: %d", $amount);
-
+echo sprintf("Sum of valid room sector ids: %d\n", $validRoomSectorIDSum);
+echo sprintf("Sector ID of room where N. Pole objects are stored: %d\n", $northPoleStorageID);
